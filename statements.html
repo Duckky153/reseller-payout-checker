@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <meta name="description" content="A one-page payout statement per reseller, built from the same data and rules as the Reseller Payout Checker. Synthetic data.">
+  <title>Reseller Statements</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <span class="tag">Synthetic data</span>
+      <h1>Reseller statements</h1>
+      <p class="lede">One page per reseller, the kind you'd send a partner so nobody has to ask how their payout was worked out. It uses the same data and rules as the payout checker, so every balance matches it to the cent.</p>
+      <noscript><p>This page needs JavaScript to build the statements.</p></noscript>
+      <nav class="page-nav" aria-label="Pages">
+        <a href="index.html">Back to the payout checker</a>
+      </nav>
+    </header>
+
+    <main>
+      <div class="controls">
+        <label for="reseller-picker">Reseller</label>
+        <select id="reseller-picker"></select>
+        <span class="muted" id="picker-status"></span>
+      </div>
+
+      <article class="card statement" id="statement" aria-live="polite"></article>
+
+      <div class="copy-row">
+        <button type="button" class="btn" id="copy-csv">Copy as CSV</button>
+        <span class="copy-status" id="copy-status" role="status"></span>
+      </div>
+      <label class="visually-hidden" for="csv-fallback">Statement as CSV</label>
+      <textarea class="csv" id="csv-fallback" readonly hidden></textarea>
+    </main>
+
+    <footer>
+      <p>Built by Dakshit Raj with AI coding tools (Claude Code, Codex). Synthetic data: every reseller, customer, invoice and payment here is made up, and the terms are assumptions.</p>
+    </footer>
+  </div>
+
+  <script src="data.js"></script>
+  <script src="payout.mjs"></script>
+  <script src="statements.js"></script>
+</body>
+</html>

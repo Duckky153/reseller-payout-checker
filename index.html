@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <meta name="description" content="Works out what each reseller is owed for one month from invoices, payments and reseller terms, and holds anything that doesn't reconcile for review. Synthetic data.">
+  <title>Reseller Payout Checker</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <span class="tag">Synthetic data</span>
+      <h1>Reseller Payout Checker</h1>
+      <p class="lede">Works out what each reseller is owed for one month from invoice and payment exports plus each reseller's terms. Anything that doesn't reconcile is held for a person to decide. It never moves money.</p>
+      <p class="result" id="result" aria-live="polite">Working out September payouts...</p>
+      <noscript><p>This page needs JavaScript to work out the payouts.</p></noscript>
+      <nav class="page-nav" aria-label="On this page">
+        <a href="statements.html">Reseller statements</a>
+        <a href="#held">Held for review</a>
+        <a href="#assumptions">Assumptions</a>
+        <a href="#checks">Reconciliation checks</a>
+        <a href="#questions">Open questions</a>
+      </nav>
+    </header>
+
+    <main>
+      <section id="basis-section" aria-labelledby="basis-title">
+        <fieldset class="basis">
+          <legend id="basis-title">Revenue basis</legend>
+          <div class="segmented">
+            <label><input type="radio" name="basis" value="contract" checked><span>As contracted</span></label>
+            <label><input type="radio" name="basis" value="billed"><span>Everyone on billed</span></label>
+            <label><input type="radio" name="basis" value="collected"><span>Everyone on collected</span></label>
+          </div>
+        </fieldset>
+        <p class="hint">"As contracted" uses each reseller's own terms. The other two are a what-if: they show how much each payout moves if everyone earned on billed revenue (when the invoice goes out) or on collected revenue (when the customer pays).</p>
+      </section>
+
+      <section id="payouts" aria-labelledby="payouts-title">
+        <div class="section-head">
+          <h2 id="payouts-title">Payouts by reseller</h2>
+          <p>Open a reseller to see every September invoice behind its number, including the ones that were left out and why.</p>
+        </div>
+        <div class="card table-wrap">
+          <table class="payouts" id="payout-table">
+            <caption class="visually-hidden">Payout per reseller for the period</caption>
+          </table>
+        </div>
+      </section>
+
+      <section id="held" aria-labelledby="held-title">
+        <div class="section-head">
+          <h2 id="held-title">Held for review</h2>
+          <p>Each of these needs a person's decision. Held amounts stay out of "ready to pay" until then.</p>
+        </div>
+        <div class="held-grid" id="held-list"></div>
+
+        <h3 class="subhead" id="watch-title">Watch list</h3>
+        <p class="muted">Not held, but worth a look: part-paid invoices, and amounts a billed-basis reseller earns before the customer has paid.</p>
+        <div class="card table-wrap">
+          <table class="watch" id="watch-table" aria-labelledby="watch-title"></table>
+        </div>
+        <ul class="notes" id="notes-list"></ul>
+      </section>
+
+      <section id="assumptions" aria-labelledby="assumptions-title">
+        <div class="section-head">
+          <h2 id="assumptions-title">Assumptions</h2>
+          <p>The reseller terms are made up for this demo. Every rule the checker uses is listed below in plain words.</p>
+        </div>
+        <div class="card table-wrap">
+          <table class="terms-table" id="terms-table">
+            <caption class="visually-hidden">Reseller terms</caption>
+          </table>
+        </div>
+        <div class="card prose stack-gap">
+          <ul>
+            <li>Money is kept in whole cents and rates in basis points (100 bps = 1%). Every division rounds down.</li>
+            <li>What earns a share: subscriptions always; add-ons only if the reseller's terms include them; one-time fees (implementation, training) never; void invoices never.</li>
+            <li>Billed basis: the reseller earns on an invoice when it goes out, paid or not. Collected basis: the reseller earns on the share that was paid (eligible amount times paid over total, rounded down to the cent).</li>
+            <li>Earned on each invoice = eligible amount times the rate, rounded down to the cent. The fractions of a cent that rounding drops are added up and shown, so the totals reconcile to the cent.</li>
+            <li>A 12-month term runs from the customer's start date. Invoices dated on or after the anniversary earn nothing. Lifetime terms never stop.</li>
+            <li>Payments are matched to invoices by reference, oldest first. A payment with no reference is held. A payment that arrives after its invoice is already paid in full is a duplicate: it's held and doesn't count as revenue.</li>
+            <li>A refund on an invoice that was already paid out: if the reseller's terms allow clawbacks, the checker proposes taking back the same share of what was paid on that invoice as the share that was refunded, and holds it until someone confirms. If they don't, the reseller keeps what it was paid and the refund is absorbed (shown as a note).</li>
+            <li>A customer who changes resellers during the month is held, with three options: split by days (each reseller's own terms, for the days the customer was theirs), all to the old reseller, or all to the new one. The amount in question is the largest of the three. A 12-month term at the new reseller would start on the move date.</li>
+            <li>A customer tagged to a reseller with no terms on file is held. Nothing is guessed.</li>
+            <li>Each reseller's own invoice to us is compared with what the record says it earned under its contract, before held items are decided. Any difference is held. The basis what-if never changes this comparison.</li>
+            <li>Part-paid invoices aren't held. They go on the Watch list, as do billed-basis amounts earned before the customer pays.</li>
+            <li>Payout minimum: if a reseller's total for the month, plus anything carried in, is under its minimum, all of it carries to next month.</li>
+            <li>Proposed clawbacks and held amounts are not taken out of, or added to, "ready to pay" until a person decides.</li>
+            <li>Direct customers (no reseller) are ignored. Only invoices dated in September earn in September.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section id="checks" aria-labelledby="checks-title">
+        <div class="section-head">
+          <h2 id="checks-title">Reconciliation checks</h2>
+          <p>Worked out live every time the numbers change. If any of these fails, the payout shouldn't go out.</p>
+        </div>
+        <ul class="card checks" id="checks-list"></ul>
+      </section>
+
+      <section id="questions" aria-labelledby="questions-title">
+        <div class="section-head">
+          <h2 id="questions-title">Questions I'd need answered before using this on real numbers</h2>
+        </div>
+        <div class="card prose">
+          <ol class="questions">
+            <li>Do resellers earn on billed or collected revenue, and does it differ by partner?</li>
+            <li>Do add-ons and one-time implementation fees count?</li>
+            <li>Is the share for the life of the customer or a fixed term?</li>
+            <li>When a customer is refunded after a payout, do you claw it back from the next payout or absorb it?</li>
+            <li>Do any resellers bill customers themselves and remit to you?</li>
+            <li>Monthly or quarterly payouts, and is there a minimum?</li>
+          </ol>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <p>Built by Dakshit Raj with AI coding tools (Claude Code, Codex). Synthetic data: every reseller, customer, invoice and payment on this page is made up, and the terms are assumptions.</p>
+    </footer>
+  </div>
+
+  <script src="data.js"></script>
+  <script src="payout.mjs"></script>
+  <script src="app.js"></script>
+</body>
+</html>
